@@ -1,45 +1,35 @@
+import os
 import logging
 from aiogram import Bot, Dispatcher, types
-from aiogram.client.default import DefaultBotProperties
-from aiogram.enums import ParseMode
-import sys
-import asyncio
-from dotenv import load_dotenv
-import os
-from aiogram.types import Message
-
-load_dotenv()
-token = os.getenv('TELEGRAM_API')
-logger = logging.getLogger(__name__)
+from aiogram.webhook.aiohttp_server import setup_application
+from aiohttp import web
 
 logging.basicConfig(level=logging.INFO)
 
-bot = Bot(token=token)
-dp = Dispatcher() 
+# Load token from environment variables
+TOKEN = os.getenv("TELEGRAM_API")
+bot = Bot(token=TOKEN)
+dp = Dispatcher(bot)
 
-@dp.message()
-async def echo_handler(message: Message) -> None:
-    """
-    Handler will forward receive a message back to the sender
+# Define your message handler (aiogram v2 style; adjust if using v3)
+@dp.message_handler()
+async def echo(message: types.Message):
+    await message.answer(message.text)
 
-    By default, message handler will handle all message types (like a text, photo, sticker etc.)
-    """
-    try:
-        # Send a copy of the received message
-        await message.send_copy(chat_id=message.chat.id)
-    except TypeError:
-        # But not all the types is supported to be copied so need to handle it
-        await message.answer("Nice try!")
+# Create an aiohttp web application configured for webhooks
+app = setup_application(dispatcher=dp, path="/webhook")
 
+# This function is what Cloud Functions will call for HTTP requests.
+async def telegram_webhook(request: web.Request):
+    # Process the incoming update from Telegram
+    data = await request.json()
+    update = types.Update(**data)
+    await dp.process_update(update)
+    return web.Response(text="OK")
 
-async def main() -> None:
-    # Initialize Bot instance with default bot properties which will be passed to all API calls
-    bot = Bot(token=token, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
+# Add the webhook endpoint to the app
+app.router.add_post("/webhook", telegram_webhook)
 
-    # And the run events dispatching
-    await dp.start_polling(bot)
-
-
+# If running locally, you can start aiohttp server:
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.INFO, stream=sys.stdout)
-    asyncio.run(main())
+    web.run_app(app, host="0.0.0.0", port=int(os.getenv("PORT", 8080)))

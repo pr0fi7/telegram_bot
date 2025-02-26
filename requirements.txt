@@ -1,0 +1,4 @@
+aiohttp
+functions-framework
+python-dotenv
+aiogram
