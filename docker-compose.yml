@@ -1,0 +1,31 @@
+version: '3.9'
+
+services:
+  redis:
+    image: redis
+    ports:
+      - "6379:6379"
+
+  celery_worker:
+    build: .
+    command: celery -A tasks worker --loglevel=info
+    environment:
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - TELEGRAM_API=${TELEGRAM_API}
+      - OPENAI_API=${OPENAI_API_KEY}
+    depends_on:
+      - redis
+
+
+  telegram_bot:
+    build: .
+
+    env_file:
+      - .env  
+    environment:
+      - TELEGRAM_API=${TELEGRAM_API}
+      - OPENAI_API=${OPENAI_API_KEY}
+      - CELERY_BROKER_URL=redis://redis:6379/0
+    depends_on:
+      - redis
+      - celery_worker

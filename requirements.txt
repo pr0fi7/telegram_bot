@@ -2,3 +2,6 @@ aiohttp
 functions-framework
 python-dotenv
 aiogram
+openai
+celery
+redis

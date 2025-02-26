@@ -10,6 +10,8 @@ from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
 from aiogram.filters import CommandStart
 from aiogram.types import Message
+from openai_requests import get_answer
+
 
 logging.basicConfig(level=logging.INFO)
 
@@ -40,8 +42,9 @@ async def echo_handler(message: Message) -> None:
     By default, message handler will handle all message types (like a text, photo, sticker etc.)
     """
     try:
-        # Send a copy of the received message
-        await message.send_copy(chat_id=message.chat.id)
+        answer = await get_answer(message.text)
+        logging.info(answer)
+        await message.answer(answer)
     except TypeError:
         # But not all the types is supported to be copied so need to handle it
         await message.answer("Nice try!")
