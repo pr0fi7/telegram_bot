@@ -1,1 +1,1 @@
-worker: python main.py
+worker: docker-compose up --build
