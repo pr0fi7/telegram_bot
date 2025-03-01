@@ -7,10 +7,10 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy your source code
-COPY . .
+COPY app/ .
 
 # Expose the port if your bot listens on one (optional)
 EXPOSE 8080
 
 # Command to run your bot, adjust as needed.
-CMD ["python", "main.py"]
+CMD ["python", "app/main.py"]

@@ -10,7 +10,7 @@ from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
 from aiogram.filters import CommandStart
 from aiogram.types import Message
-from openai_requests import get_answer
+from openai_requests.tasks import get_answer
 
 
 logging.basicConfig(level=logging.INFO)
@@ -36,17 +36,16 @@ async def command_start_handler(message: Message) -> None:
 
 @dp.message()
 async def echo_handler(message: Message) -> None:
-    """
-    Handler will forward receive a message back to the sender
-
-    By default, message handler will handle all message types (like a text, photo, sticker etc.)
-    """
     try:
+        # Queue the task and wait for the result (blocking call)
+        # result = get_answer.delay(message.text)
         answer = await get_answer(message.text)
+        # Get the task result (this will block until the task is complete or times out)
+        # answer = result.get() 
         logging.info(answer)
         await message.answer(answer)
-    except TypeError:
-        # But not all the types is supported to be copied so need to handle it
+    except Exception as e:
+        logging.exception("Error processing message: %s", e)
         await message.answer("Nice try!")
 
 

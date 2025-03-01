@@ -8,24 +8,27 @@ services:
 
   celery_worker:
     build: .
-    command: celery -A tasks worker --loglevel=info
+    command: celery -A my_app worker --loglevel=info
     environment:
       - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
       - TELEGRAM_API=${TELEGRAM_API}
       - OPENAI_API=${OPENAI_API_KEY}
+      - PYTHONPATH=/app
+
     depends_on:
       - redis
 
-
   telegram_bot:
     build: .
-
     env_file:
       - .env  
     environment:
       - TELEGRAM_API=${TELEGRAM_API}
       - OPENAI_API=${OPENAI_API_KEY}
       - CELERY_BROKER_URL=redis://redis:6379/0
+      - PYTHONPATH=/app
+
     depends_on:
       - redis
       - celery_worker
