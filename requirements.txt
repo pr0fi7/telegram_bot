@@ -5,3 +5,12 @@ aiogram
 openai
 celery
 redis
+magika
+pillow
+opencv-python
+qdrant-client
+python-pptx
+python-docx
+google-generativeai
+psycopg2-binary
+pandas

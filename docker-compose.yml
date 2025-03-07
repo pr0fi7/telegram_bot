@@ -1,6 +1,13 @@
 version: '3.9'
 
 services:
+  qdrant: 
+    image: qdrant/qdrant
+    ports:
+      - "6333:6333"
+    volumes:
+      - ./qdrant_data:/data
+
   redis:
     image: redis
     ports:
@@ -8,10 +15,10 @@ services:
 
   celery_worker:
     build: .
-    command: celery -A my_app worker --loglevel=info
+    command: celery -A app worker --loglevel=info
     environment:
-      - CELERY_BROKER_URL=redis://redis:6379/0
-      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - CELERY_BROKER_URL=${CELERY_BROKER_URL}
+      - CELERY_RESULT_BACKEND=${CELERY_RESULT_BACKEND}
       - TELEGRAM_API=${TELEGRAM_API}
       - OPENAI_API=${OPENAI_API_KEY}
       - PYTHONPATH=/app
