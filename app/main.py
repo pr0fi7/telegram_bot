@@ -63,7 +63,7 @@ async def echo_handler(message: types.Message) -> None:
         await loop.run_in_executor(None, result.get)
 
         # Now build conversation and call OpenAI API
-        conversation = await build_conversation(file_text, "documents")
+        conversation = await build_conversation(message.text, "documents")
         ai_answer = await call_openai_api(conversation)
 
         await message.answer(html.escape(ai_answer), parse_mode=None)
