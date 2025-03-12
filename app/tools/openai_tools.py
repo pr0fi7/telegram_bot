@@ -81,20 +81,24 @@ from .mylogger import logger
 #   }
 # }
 
-async def call_openai_api(conversation: list[dict], model: str = "gpt-4o-mini") -> dict:
+async def call_openai_api(conversation: list[dict], json_schema: str = None, model: str = "gpt-4o-mini") -> str:
     """
-    Asynchronously call the OpenAI API and return the parsed JSON response.
+    Asynchronously call the OpenAI API and return the parsed response content as a string.
     """
     client = openai.Client()
-    client.api_key = OPENAI_API  # make sure OPENAI_API is defined correctly
+    client.api_key = OPENAI_API  # Ensure OPENAI_API is defined correctly
+
+    params = {
+        "model": model,
+        "messages": conversation,
+        "temperature": 0.7,
+        "max_tokens": 15000,
+    }
+    if json_schema is not None:
+        params["response_format"] = json_schema
 
     try:
-        response = client.beta.chat.completions.parse(
-            model=model,
-            messages=conversation,
-            temperature=0.7,
-            max_tokens=15000
-        )
+        response = client.beta.chat.completions.parse(**params)
         logger.info("Full response: %s", response)
         
         content = response.choices[0].message.content.strip()
@@ -107,6 +111,7 @@ async def call_openai_api(conversation: list[dict], model: str = "gpt-4o-mini") 
     except Exception as e:
         logger.error(f"OpenAI API error: {e}")
         raise e
+
 
 def load_image(image_bytes):
     # Ensure the image file is opened correctly

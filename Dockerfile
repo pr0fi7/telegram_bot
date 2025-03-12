@@ -9,7 +9,7 @@ RUN apt-get update && apt-get install -y \
       libglib2.0-0 \
     && rm -rf /var/lib/apt/lists/*
 
-WORKDIR /app
+WORKDIR /project
 
 
 # Copy requirements and install them
@@ -23,4 +23,4 @@ COPY . .
 EXPOSE 8080
 
 # Command to run your bot, adjust as needed.
-CMD ["python", "app/main.py"]
+CMD ["python", "-m", "app.main"]

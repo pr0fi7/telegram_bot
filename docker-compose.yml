@@ -12,19 +12,47 @@ services:
     image: redis
     ports:
       - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  postgres:
+    image: postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - ./postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   celery_worker:
     build: .
-    command: celery -A app worker --loglevel=info
+    command: celery -A app.celery_tasks worker --loglevel=info
     environment:
       - CELERY_BROKER_URL=${CELERY_BROKER_URL}
       - CELERY_RESULT_BACKEND=${CELERY_RESULT_BACKEND}
       - TELEGRAM_API=${TELEGRAM_API}
       - OPENAI_API=${OPENAI_API_KEY}
-      - PYTHONPATH=/app
-
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_PORT=${POSTGRES_PORT}
     depends_on:
       - redis
+    healthcheck:
+      test: ["CMD-SHELL", "celery -A app.celery_tasks status || exit 1"]
+      interval: 10s
+      timeout: 10s
+      retries: 3
 
   telegram_bot:
     build: .
@@ -33,9 +61,13 @@ services:
     environment:
       - TELEGRAM_API=${TELEGRAM_API}
       - OPENAI_API=${OPENAI_API_KEY}
-      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_BROKER_URL=${CELERY_BROKER_URL}
+      - CELERY_RESULT_BACKEND=${CELERY_RESULT_BACKEND}
       - PYTHONPATH=/app
-
     depends_on:
-      - redis
-      - celery_worker
+      postgres:
+        condition: service_healthy  
+      redis:
+        condition: service_healthy
+      celery_worker:
+        condition: service_healthy

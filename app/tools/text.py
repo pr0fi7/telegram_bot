@@ -90,6 +90,13 @@ def generate_embeddings(sentences: list[str]) -> list[list[float]]:
 
     return [embedding.flatten().tolist() for embedding in embeddings]  # ✅ Returns all embeddings
 
+def escape_markdown_v2(text: str) -> str:
+    """
+    Escapes reserved characters for MarkdownV2.
+    Reserved characters are: _ * [ ] ( ) ~ ` > # + - = | { } . !
+    """
+    escape_chars = r'_*\[\]()~`>#+-=|{}.!'
+    return re.sub(f'([{re.escape(escape_chars)}])', r'\\\1', text)
 
 
 @shared_task    
