@@ -60,6 +60,10 @@ SYSTEM_PROMPT = '''
 Інформація: {text}
 '''.strip()
 
+HR_PROMPT = '''' \
+Ти експерт в сфері рекрутингу. Намагайся допомогти використовуючи всі знання з рекрутингу які ти маєш.
+'''
+
 async def build_chat_conversation(SYSTEM_PROMPT: str, user_query: str = "") -> str:
     conversation = [
         {"role": "system", "content": SYSTEM_PROMPT},

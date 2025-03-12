@@ -38,7 +38,7 @@ async def handle_cv_upload(message: types.Message, state: FSMContext):
 
     person_name = message.from_user.full_name  
     person_id = message.from_user.id
-    new_id = cvs_db.insert(person_name, file_text)
+    new_id = cvs_db.insert(person_name, raw_text=file_text)
     await state.update_data(cv_text=file_text, cv_id=new_id, person_id=person_id)
     logger.info(f"Inserted CV record with ID: {new_id}")
 

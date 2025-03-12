@@ -46,11 +46,50 @@ class telegram_db:
                         question_order INTEGER NOT NULL PRIMARY KEY,
                         question_text TEXT NOT NULL
                     );
+                    CREATE TABLE IF NOT EXISTS public.chat_conversations (
+                        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        person TEXT,
+                        person_id TEXT,
+                        conversation JSONB
+                    );
                 ''')
             except Exception as e:
                 print("Error creating tables:", e)
             finally:
                 self.conn.autocommit = False  # Reset autocommit
+
+
+    def insert_chat_conversation(self, person, person_id, conversation):
+        with self.conn.cursor() as cursor:
+            cursor.execute('''
+                INSERT INTO public.chat_conversations (person, person_id, conversation)
+                VALUES (%s, %s, %s)
+                RETURNING id;
+            ''', (person, person_id, psycopg2.extras.Json(conversation)))
+            new_id = cursor.fetchone()[0]
+        self.conn.commit()
+        return new_id
+
+    def update_chat_conversation(self, id, conversation):
+        with self.conn.cursor() as cursor:
+            cursor.execute('''
+                UPDATE public.chat_conversations
+                SET conversation = %s
+                WHERE id = %s
+            ''', (psycopg2.extras.Json(conversation), id))
+        self.conn.commit()
+    
+    def get_all_chat_conversations(self):
+        with self.conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as cursor:
+            cursor.execute("SELECT * FROM public.chat_conversations")
+            rows = cursor.fetchall()
+            return [dict(row) for row in rows]  # Convert to JSON format
+        
+    def delete_chat_conversation(self, id):
+        with self.conn.cursor() as cursor:
+            cursor.execute("DELETE FROM public.chat_conversations WHERE id = %s", (id,))
+        return cursor.rowcount > 0
 
     def get_predefined_questions(self):
         with self.conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as cursor:

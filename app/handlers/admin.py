@@ -4,6 +4,7 @@ from aiogram.filters import Command, StateFilter
 from aiogram.fsm.context import FSMContext
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 from aiogram.fsm.state import StatesGroup, State
+from app.tools import create_conversation_file
 from app.models import cvs_db  # Assumes cvs_db has methods for questions
 
 router = Router()
@@ -20,6 +21,9 @@ class AdminState(StatesGroup):
     update_question = State()
     update_question_text = State()
     delete_question = State()
+    fetch_chat_data = State()
+    fetch_people_data = State()
+
 
 @router.message(Command("admin"))
 async def admin_auth_handler(message: types.Message, state: FSMContext):
@@ -43,6 +47,12 @@ async def check_admin_password(message: types.Message, state: FSMContext):
     kb_builder.row(
         types.InlineKeyboardButton(text="Оновити запитання", callback_data="update_question"),
         types.InlineKeyboardButton(text="Видалити запитання", callback_data="delete_question")
+    )
+    kb_builder.row(
+        types.InlineKeyboardButton(text="Дані Чатів", callback_data="chat_data")
+    )
+    kb_builder.row(
+        types.InlineKeyboardButton(text="Дані Користувачів", callback_data="people_data")
     )
     await message.answer("Вітаємо в панелі адміна, що ви хочете зробити", reply_markup=kb_builder.as_markup())
 
@@ -125,3 +135,38 @@ async def process_delete_question(message: types.Message, state: FSMContext):
     except Exception as e:
         await message.answer(f"Error deleting question: {e}")
     await state.clear()
+
+
+@router.callback_query(lambda c: c.data == "chat_data")
+async def fetch_chat_data_handler(query: types.CallbackQuery):
+    admin_id = query.from_user.id
+    try:
+        data_list = cvs_db.get_all_chat_conversations()
+        if not data_list:
+            await query.message.answer("Немає даних чатів.")
+        else:
+            for conversation in data_list:
+                # Pass the bot instance and ADMIN_ID to create_conversation_file,
+                # which should convert the conversation to a file and send it to ADMIN_ID.
+                await create_conversation_file(query.bot, conversation, admin_id)
+        await query.answer("Дані чатів надіслані.")
+    except Exception as e:
+        await query.message.answer(f"Error fetching chat data: {e}")
+        await query.answer()
+
+@router.callback_query(lambda c: c.data == "people_data")
+async def fetch_people_data_handler(query: types.CallbackQuery):
+    admin_id = query.from_user.id
+    try:
+        data_list = cvs_db.get_all()
+        if not data_list:
+            await query.message.answer("Немає даних користувачів.")
+        else:
+            for entry in data_list:
+                # You can create a file or simply format the text.
+                # Here we assume create_conversation_file works for user data too.
+                await create_conversation_file(query.bot, entry, admin_id)
+        await query.answer("Дані користувачів надіслані.")
+    except Exception as e:
+        await query.message.answer(f"Error fetching people data: {e}")
+        await query.answer()
