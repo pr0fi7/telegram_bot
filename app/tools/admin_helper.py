@@ -9,14 +9,16 @@ from aiogram.types import FSInputFile
 load_dotenv()
 
 
-async def notify_admin_new_entry(bot, id):
+async def notify_admin_new_entry(bot, entry_id, admin_chat_id):
     """ Sends a notification to the admin about a new entry """
-    json_entry = cvs_db.get_by_id(id)
+    json_entry = cvs_db.get_by_id(entry_id)
     person_name = json_entry.get("person")
     raw_text = json_entry.get("raw_text")
     formatted_text = json_entry.get("formatted_text")
     entry_summary = f"New entry from {person_name}:\n{raw_text}\n\nSummary:\n{formatted_text}"
-    await bot.send_message(id, entry_summary)
+    await bot.send_message(admin_chat_id, entry_summary)
+
+
 import csv
 import json
 import tempfile

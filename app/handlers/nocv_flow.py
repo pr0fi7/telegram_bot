@@ -4,6 +4,11 @@ from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 from models import cvs_db
 from tools import call_openai_api, json_schema, build_conversation, SUMMARY_PROMPT, notify_admin_new_entry
+from dotenv import load_dotenv
+import os
+load_dotenv()
+ADMIN_ID = int(os.getenv("ADMIN_ID", "123456789"))
+
 router = Router()
 
 class ConversationFlow(StatesGroup):
@@ -58,7 +63,7 @@ async def conversation_handler(message: types.Message, state: FSMContext):
         conversation = await build_conversation(SUMMARY_PROMPT, summary)
         summary = await call_openai_api(conversation, json_schema)
         update = cvs_db.update(current_id, formatted_text=summary, person_name=person_name)
-        await notify_admin_new_entry(message.bot, current_id)
+        await notify_admin_new_entry(message.bot, current_id, ADMIN_ID)
         await message.answer(f"Ваше резюме:\n{summary}")
 
 @router.message(lambda message: message.text and message.text.lower() == "done", StateFilter(ConversationFlow.waiting_for_info))

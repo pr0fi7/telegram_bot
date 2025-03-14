@@ -174,9 +174,8 @@ async def get_openai_embeddings(
     texts: list[str],
     model: str = "text-embedding-3-small",
     base_url: str = None,
-    api_key: str = None,
 ) -> np.ndarray:
-    openai.api_key = api_key or OPENAI_API
+    openai.api_key = OPENAI_API
     openai_async_client = (
         AsyncOpenAI() if base_url is None else AsyncOpenAI(base_url=base_url)
     )

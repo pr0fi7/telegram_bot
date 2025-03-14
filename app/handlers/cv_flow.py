@@ -7,7 +7,11 @@ from aiogram.fsm.state import State, StatesGroup
 from tools import logger, call_openai_api, SUMMARY_PROMPT, json_schema, build_conversation, notify_admin_new_entry
 from models import cvs_db
 from handle_file import extract_text_from_file, add_to_qdrant
+from dotenv import load_dotenv
+import os
 
+load_dotenv()
+ADMIN_ID = int(os.getenv("ADMIN_ID", "123456789"))
 router = Router()
 
 class CVFlow(StatesGroup):
@@ -48,7 +52,7 @@ async def handle_cv_upload(message: types.Message, state: FSMContext):
     summary = await call_openai_api(conversation, json_schema)
     update = cvs_db.update(new_id,person_name=person_name, formatted_text=summary)
     logger.info(f"Updated CV record with ID: {new_id}")
-    await notify_admin_new_entry(message.bot, new_id)
+    await notify_admin_new_entry(message.bot, new_id, ADMIN_ID)
 
     await message.answer("Ваше резюме було успішно завантажено!")
     await message.answer("Дякую за завантаження резюме! Якщо ви хочете покращити його, натисніть на кнопку нижче.", reply_markup=inline_kb.as_markup())
