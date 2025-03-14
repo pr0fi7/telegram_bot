@@ -2,8 +2,8 @@ from aiogram import Router, types
 from aiogram.filters import StateFilter
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
-from app.models import cvs_db
-from app.tools import call_openai_api, json_schema, build_conversation, SUMMARY_PROMPT, notify_admin_new_entry
+from models import cvs_db
+from tools import call_openai_api, json_schema, build_conversation, SUMMARY_PROMPT, notify_admin_new_entry
 router = Router()
 
 class ConversationFlow(StatesGroup):
@@ -25,6 +25,12 @@ async def have_cv_no_handler(query: types.CallbackQuery, state: FSMContext):
 
 @router.message(StateFilter(ConversationFlow.waiting_for_info))
 async def conversation_handler(message: types.Message, state: FSMContext):
+    if message.text.startswith("/"):
+        await state.clear()
+        return  # The command will be processed by its dedicated handler.
+
+    person_name = message.from_user.full_name   
+    person_id = message.from_user.id
     data = await state.get_data()
     conversation = data.get("conversation", [])
     question_index = data.get("question_index", 0)
@@ -50,9 +56,9 @@ async def conversation_handler(message: types.Message, state: FSMContext):
         await message.answer(f"Дякую за відповіді!")
         current_id = cvs_db.insert(message.from_user.full_name, raw_text=summary)
         conversation = await build_conversation(SUMMARY_PROMPT, summary)
-        summary = call_openai_api(conversation, json_schema)
-        update = cvs_db.update(current_id, formatted_text=summary)
-        await notify_admin_new_entry(current_id)
+        summary = await call_openai_api(conversation, json_schema)
+        update = cvs_db.update(current_id, formatted_text=summary, person_name=person_name)
+        await notify_admin_new_entry(message.bot, current_id)
         await message.answer(f"Ваше резюме:\n{summary}")
 
 @router.message(lambda message: message.text and message.text.lower() == "done", StateFilter(ConversationFlow.waiting_for_info))

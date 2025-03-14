@@ -4,8 +4,8 @@ from aiogram.filters import Command, StateFilter
 from aiogram.fsm.context import FSMContext
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 from aiogram.fsm.state import StatesGroup, State
-from app.tools import create_conversation_file
-from app.models import cvs_db  # Assumes cvs_db has methods for questions
+from tools import create_flexible_csv, logger
+from models import cvs_db  # Assumes cvs_db has methods for questions
 
 router = Router()
 
@@ -146,13 +146,19 @@ async def fetch_chat_data_handler(query: types.CallbackQuery):
             await query.message.answer("Немає даних чатів.")
         else:
             for conversation in data_list:
-                # Pass the bot instance and ADMIN_ID to create_conversation_file,
-                # which should convert the conversation to a file and send it to ADMIN_ID.
-                await create_conversation_file(query.bot, conversation, admin_id)
+                try:
+                    await create_flexible_csv(query.bot, conversation, admin_id)
+                    logger.info(f'conversation: {conversation}')
+                except Exception as inner_e:
+                    # Log the error from create_conversation_file
+                    await query.message.answer(f"Error in create_conversation_file: {inner_e}")
+                    raise  # or handle it appropriately
+        # Answer callback only once
         await query.answer("Дані чатів надіслані.")
     except Exception as e:
         await query.message.answer(f"Error fetching chat data: {e}")
-        await query.answer()
+        # Optionally, don't call query.answer() again here if already called
+
 
 @router.callback_query(lambda c: c.data == "people_data")
 async def fetch_people_data_handler(query: types.CallbackQuery):
@@ -165,7 +171,14 @@ async def fetch_people_data_handler(query: types.CallbackQuery):
             for entry in data_list:
                 # You can create a file or simply format the text.
                 # Here we assume create_conversation_file works for user data too.
-                await create_conversation_file(query.bot, entry, admin_id)
+                try:
+                    await create_flexible_csv(query.bot, entry, admin_id)
+                    logger.info(f'entry: {entry}')
+                except Exception as inner_e:
+                    # Log the error from create_conversation_file
+                    await query.message.answer(f"Error in create_conversation_file: {inner_e}")
+                    raise  # or handle it appropriately
+
         await query.answer("Дані користувачів надіслані.")
     except Exception as e:
         await query.message.answer(f"Error fetching people data: {e}")

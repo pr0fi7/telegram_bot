@@ -1,6 +1,6 @@
 from qdrant_client import QdrantClient
 from qdrant_client.models import VectorParams, Distance, PointStruct, Filter, FieldCondition, MatchValue
-from app.tools import get_openai_embeddings, QDRANT_CLIENT_HOST
+from tools import get_openai_embeddings, QDRANT_CLIENT_HOST
 import uuid
 from celery import shared_task
 from qdrant_client.http.exceptions import ApiException

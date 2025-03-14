@@ -11,16 +11,11 @@ RUN apt-get update && apt-get install -y \
 
 WORKDIR /project
 
-
 # Copy requirements and install them
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy your source code
-COPY . .
+COPY /app .
 
-# Expose the port if your bot listens on one (optional)
-EXPOSE 8080
-
-# Command to run your bot, adjust as needed.
-CMD ["python", "-m", "app.main"]
+CMD ["python", "main.py"]

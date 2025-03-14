@@ -1,6 +1,6 @@
 from celery import shared_task
 # from ..celery import app
-from app.tools import async_to_sync, split_sentences, generate_embeddings, cosine_distance, logger, average_embeddings, merge_fragments
+from tools import async_to_sync, split_sentences, generate_embeddings, cosine_distance, logger, average_embeddings, merge_fragments
 import numpy as np
 from .qdrant_models import create_or_get_collection, upsert_task
 from celery import shared_task, chord, chain

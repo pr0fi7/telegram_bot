@@ -4,9 +4,9 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import InlineKeyboardButton
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 from aiogram.fsm.state import State, StatesGroup
-from app.tools import logger, call_openai_api, SUMMARY_PROMPT, json_schema, build_conversation, notify_admin_new_entry
-from app.models import cvs_db
-from app.handle_file import extract_text_from_file, add_to_qdrant
+from tools import logger, call_openai_api, SUMMARY_PROMPT, json_schema, build_conversation, notify_admin_new_entry
+from models import cvs_db
+from handle_file import extract_text_from_file, add_to_qdrant
 
 router = Router()
 

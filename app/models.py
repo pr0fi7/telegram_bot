@@ -16,7 +16,7 @@ class telegram_db:
             except psycopg2.OperationalError as e:
                 attempts -= 1
                 print("Postgres not ready, retrying in 5 seconds...")
-                time.sleep(5)
+                time.sleep(10)
         else:
             raise Exception("Could not connect to Postgres after multiple attempts")
         self._create_tables()

@@ -4,7 +4,7 @@ from pptx import Presentation
 import pandas as pd
 from zipfile import ZipFile 
 import docx
-from app.tools import getWhatonImage_celery, get_ext_and_mime, gemini_upload_and_chat
+from tools import getWhatonImage_celery, get_ext_and_mime, gemini_upload_and_chat
 from io import BytesIO
 
 @shared_task

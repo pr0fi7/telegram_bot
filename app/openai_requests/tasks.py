@@ -4,7 +4,7 @@ import os
 import logging
 from celery import shared_task
 import asyncio
-from app.tools import async_to_sync
+from tools import async_to_sync
 
 load_dotenv()
 logging.basicConfig(level=logging.INFO)
